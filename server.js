@@ -7,7 +7,6 @@ import puppeteer from "puppeteer";
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// NOAA Surf Forecast (LA/Oxnard). You can change it later.
 const NOAA_URL =
   process.env.NOAA_URL ||
   "https://forecast.weather.gov/product.php?site=LOX&issuedby=LOX&product=SRF&format=CI&version=1&glossary=1&highlight=on";
@@ -17,12 +16,20 @@ const SNAP_PATH  = path.join(PUBLIC_DIR, "latest.png");
 
 if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
 
-// no caching; allow Unity to fetch freely
+// no-cache + CORS
 app.use((_, res, next) => {
   res.set("Cache-Control", "no-store");
   res.set("Access-Control-Allow-Origin", "*");
   next();
 });
+
+// 🔎 log all requests (place BEFORE static so /latest.png is logged)
+app.use((req, _res, next) => {
+  console.log(`[req] ${req.method} ${req.url}`);
+  next();
+});
+
+// serve /latest.png
 app.use(express.static(PUBLIC_DIR));
 
 async function takeShot() {
@@ -33,10 +40,8 @@ async function takeShot() {
   });
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 1800, deviceScaleFactor: 2 });
-
   await page.goto(NOAA_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
-  // Prefer cropping to the <pre> section (cleanest view). Fallback to full page.
   try {
     const pre = await page.$("pre");
     if (pre) {
@@ -50,13 +55,18 @@ async function takeShot() {
     console.error("[snapshot] error during screenshot, falling back:", e.message);
     await page.screenshot({ path: SNAP_PATH, fullPage: true });
   }
-
   await browser.close();
 }
 
-// initial shot, then every 15 min
+// initial + every 15 minutes
 takeShot().catch(console.error);
 cron.schedule("*/15 * * * *", () => takeShot().catch(console.error));
 
 app.get("/health", (_, res) => res.send("ok"));
+app.get("/", (_req, res) =>
+  res
+    .type("text/plain")
+    .send("RipFinder WebView is running.\nTry /latest.png for the snapshot, or /health.")
+);
+
 app.listen(PORT, () => console.log(`Server running on :${PORT}`));
