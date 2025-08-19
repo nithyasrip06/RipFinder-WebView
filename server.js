@@ -7,7 +7,7 @@ import puppeteer from "puppeteer";
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// NOAA LA/Oxnard Surf Forecast source (change if needed)
+// NOAA LA/Oxnard Surf Forecast source
 const NOAA_URL =
   process.env.NOAA_URL ||
   "https://forecast.weather.gov/product.php?site=LOX&issuedby=LOX&product=SRF&format=CI&version=1&glossary=1&highlight=on";
@@ -22,38 +22,40 @@ const SNAP_PATH  = path.join(PUBLIC_DIR, "latest.png");
 
 if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
 
-// --- middleware: CORS + no-cache ---
+// Middleware: enable CORS + disable caching
 app.use((_, res, next) => {
   res.set("Cache-Control", "no-store");
   res.set("Access-Control-Allow-Origin", "*");
   next();
 });
 
-// --- request log (before static) ---
+// Request logger
 app.use((req, _res, next) => {
   console.log(`[req] ${req.method} ${req.url}`);
   next();
 });
 
-// --- static files (/latest.png) ---
+// Serve static files
 app.use(express.static(PUBLIC_DIR));
 
 // ---- helpers ----
+
+// Escape HTML for clean rendering
 function escapeHtml(s) {
   return s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 }
 
+// Extract a specific zone section from NOAA text blocks
 function extractZoneSection(preText, zoneMatch) {
-  // NOAA separates blocks with `$$`
   const sections = preText.split("$$");
   const rx = new RegExp(zoneMatch, "i");
   for (const s of sections) {
-    // Match by zone code (e.g., CAZ340) or by header text
     if (rx.test(s)) return s.replace(/\n{3,}/g, "\n\n").trim();
   }
   return null;
 }
 
+// Take a snapshot of the forecast and save it as PNG
 async function takeShot() {
   console.log("[snapshot] starting…");
   const browser = await puppeteer.launch({
@@ -65,9 +67,9 @@ async function takeShot() {
 
   await page.goto(NOAA_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
-  // Grab the raw forecast text from the <pre> block
   let preText = "";
   try {
+    // Extract text from <pre> if available
     preText = await page.$eval("pre", (el) => el.innerText);
   } catch {
     console.warn("[snapshot] <pre> not found; falling back to full page screenshot");
@@ -85,7 +87,7 @@ async function takeShot() {
   const now = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
   const content = picked ?? "⚠️ Requested section not found in this product.";
 
-  // Build a clean HTML and screenshot that instead of NOAA chrome
+  // Build a clean HTML and render to PNG
   const html = `<!doctype html>
 <html><head><meta charset="utf-8">
 <style>
@@ -111,8 +113,8 @@ async function takeShot() {
 }
 
 // ---- schedule ----
-takeShot().catch(console.error);                 // first run on boot
-cron.schedule("*/15 * * * *", () => takeShot().catch(console.error)); // every 15 min
+takeShot().catch(console.error);                 
+cron.schedule("*/15 * * * *", () => takeShot().catch(console.error)); 
 
 // ---- routes ----
 app.get("/health", (_, res) => res.send("ok"));
