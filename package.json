@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-      "start": "node server.js"
+      "start": "node server_ex.js"
     },
     "dependencies": {
       "express": "^4.19.2",
