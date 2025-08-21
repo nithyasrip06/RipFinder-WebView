@@ -1,6 +1,6 @@
 # RipFinder WebView 
 
-A feature of the RipFinder project that embeds real-time coastal data from external websites directly into the application. This allows users to view up-to-date surf forecasts, weather reports, and safety information alongside RipFinder’s rip current detection results.
+A feature of the RipFinder project that embeds real-time coastal data from external websites directly into the application. This allows users to view up-to-date surf forecasts including rip current risk and surf height alongside RipFinder’s rip current detection results.
 
 ## Purpose
 
