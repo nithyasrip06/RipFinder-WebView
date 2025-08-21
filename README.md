@@ -11,3 +11,7 @@ The WebView provides important context by integrating live data sources such as 
 - Embeds selected external websites directly into RipFinder.
 - Updates dynamically as the source website refreshes.
 - Ensures users always have access to the latest information.
+
+## Assets & Attribution
+- Surf Zone Forecast (NWS Los Angeles/Oxnard – LOX)
+- Source: National Weather Service (NOAA) — Public Domain
