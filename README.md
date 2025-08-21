@@ -13,5 +13,5 @@ The WebView provides important context by integrating live data sources such as 
 - Ensures users always have access to the latest information.
 
 ## Assets & Attribution
-- Surf Zone Forecast (NWS Los Angeles/Oxnard – LOX)
+- [Surf Zone Forecast (NWS Los Angeles/Oxnard – LOX)](https://forecast.weather.gov/product.php?site=LOX&issuedby=LOX&product=SRF&format=CI&version=1&glossary=1&highlight=on)
 - Source: National Weather Service (NOAA) — Public Domain
